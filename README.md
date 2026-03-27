@@ -4,6 +4,8 @@
 
 A full-stack task management system with a FastAPI backend and Vue 3 frontend.
 
+> **AI Assistant** — click the ✦ button on the task list to open a chat panel powered by your own LLM API key (Claude, OpenAI, or Gemini). The assistant has full context of the task list and can answer questions, summarize progress, and perform actions like creating or updating tasks on your behalf. API keys and conversation history are stored in your browser only. Tested with Claude — other providers should work but are not guaranteed.
+
 ## Stack
 
 | Layer | Technology |

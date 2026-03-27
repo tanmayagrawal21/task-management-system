@@ -9,8 +9,13 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.80.0",
+    "@google/generative-ai": "^0.24.1",
     "@primevue/themes": "^4.5.4",
+    "@tailwindcss/typography": "^0.5.19",
     "axios": "^1.14.0",
+    "marked": "^17.0.5",
+    "openai": "^6.33.0",
     "pinia": "^3.0.4",
     "primeicons": "^7.0.0",
     "primevue": "^4.5.4",

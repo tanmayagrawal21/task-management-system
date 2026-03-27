@@ -2,6 +2,7 @@
 import { onMounted, computed, ref } from 'vue'
 import AppLayout from '@/components/AppLayout.vue'
 import TaskForm from '@/components/TaskForm.vue'
+import AiPanel from '@/components/AiPanel.vue'
 import { useTasksStore, type TaskStatus, type Task } from '@/stores/tasks'
 import { useAuthStore } from '@/stores/auth'
 import DataTable from 'primevue/datatable'
@@ -22,6 +23,7 @@ const toast = useToast()
 
 const formVisible = ref(false)
 const editingTask = ref<Task | null>(null)
+const aiPanelOpen = ref(false)
 
 const statusOptions = [
   { label: 'All statuses', value: null },
@@ -125,12 +127,16 @@ onMounted(async () => {
     <ConfirmDialog />
 
     <TaskForm v-model:visible="formVisible" :task="editingTask" @saved="onSaved" />
+    <AiPanel :open="aiPanelOpen" @close="aiPanelOpen = false" />
 
     <div class="max-w-6xl mx-auto">
       <!-- Header -->
       <div class="flex items-center justify-between mb-6">
         <h1 class="text-xl font-bold text-gray-800">Tasks</h1>
-        <Button label="New task" icon="pi pi-plus" size="small" @click="openCreate" />
+        <div class="flex gap-2">
+          <Button icon="pi pi-sparkles" severity="secondary" size="small" outlined @click="aiPanelOpen = !aiPanelOpen" v-tooltip="'AI Assistant'" />
+          <Button label="New task" icon="pi pi-plus" size="small" @click="openCreate" />
+        </div>
       </div>
 
       <!-- Filters -->
