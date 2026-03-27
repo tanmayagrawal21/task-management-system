@@ -41,6 +41,8 @@ class TaskOut(BaseModel):
     status: TaskStatus = Field(examples=[TaskStatus.in_progress])
     assigned_user_id: int | None = Field(examples=[1])
     assigned_user: UserOut | None
+    created_by_id: int | None = Field(examples=[1])
+    created_by: UserOut | None
     created_at: datetime = Field(examples=["2024-01-15T09:00:00"])
     updated_at: datetime = Field(examples=["2024-01-16T14:30:00"])
 

@@ -16,4 +16,4 @@ class User(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now(), nullable=False)
     deleted_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True, default=None)
 
-    tasks: Mapped[list["Task"]] = relationship("Task", back_populates="assigned_user")  # noqa: F821
+    tasks: Mapped[list["Task"]] = relationship("Task", foreign_keys="Task.assigned_user_id", back_populates="assigned_user")  # noqa: F821

@@ -1,15 +1,27 @@
 <script setup lang="ts">
-import { onMounted, computed } from 'vue'
+import { onMounted, computed, ref } from 'vue'
 import AppLayout from '@/components/AppLayout.vue'
-import { useTasksStore, type TaskStatus } from '@/stores/tasks'
+import TaskForm from '@/components/TaskForm.vue'
+import { useTasksStore, type TaskStatus, type Task } from '@/stores/tasks'
+import { useAuthStore } from '@/stores/auth'
 import DataTable from 'primevue/datatable'
 import Column from 'primevue/column'
 import Select from 'primevue/select'
 import Tag from 'primevue/tag'
 import Button from 'primevue/button'
 import Skeleton from 'primevue/skeleton'
+import ConfirmDialog from 'primevue/confirmdialog'
+import { useConfirm } from 'primevue/useconfirm'
+import Toast from 'primevue/toast'
+import { useToast } from 'primevue/usetoast'
 
 const store = useTasksStore()
+const auth = useAuthStore()
+const confirm = useConfirm()
+const toast = useToast()
+
+const formVisible = ref(false)
+const editingTask = ref<Task | null>(null)
 
 const statusOptions = [
   { label: 'All statuses', value: null },
@@ -39,6 +51,61 @@ function statusSeverity(status: TaskStatus) {
   return 'secondary'
 }
 
+function canEdit(task: Task) {
+  const uid = auth.user?.id
+  return uid === task.created_by_id || uid === task.assigned_user_id
+}
+
+function canClaim(task: Task) {
+  return task.assigned_user_id === null && auth.user?.id !== task.created_by_id
+}
+
+function canDelete(task: Task) {
+  return auth.user?.id === task.created_by_id
+}
+
+function openCreate() {
+  editingTask.value = null
+  formVisible.value = true
+}
+
+function openEdit(task: Task) {
+  editingTask.value = task
+  formVisible.value = true
+}
+
+function onSaved() {
+  toast.add({ severity: 'success', summary: editingTask.value ? 'Task updated' : 'Task created', life: 3000 })
+}
+
+function confirmDelete(task: Task) {
+  confirm.require({
+    message: `Delete "${task.title}"? This cannot be undone.`,
+    header: 'Delete task',
+    icon: 'pi pi-exclamation-triangle',
+    acceptLabel: 'Delete',
+    rejectLabel: 'Cancel',
+    acceptClass: 'p-button-danger',
+    accept: async () => {
+      try {
+        await store.deleteTask(task.id)
+        toast.add({ severity: 'success', summary: 'Task deleted', life: 3000 })
+      } catch {
+        toast.add({ severity: 'error', summary: 'Failed to delete task', life: 4000 })
+      }
+    },
+  })
+}
+
+async function claimTask(task: Task) {
+  try {
+    await store.claimTask(task.id)
+    toast.add({ severity: 'success', summary: 'Task assigned to you', life: 3000 })
+  } catch (e: any) {
+    toast.add({ severity: 'error', summary: e?.response?.data?.detail ?? 'Failed to claim task', life: 4000 })
+  }
+}
+
 function onPageChange(event: { page: number }) {
   store.setPage(event.page + 1)
 }
@@ -54,11 +121,16 @@ onMounted(async () => {
 
 <template>
   <AppLayout>
+    <Toast />
+    <ConfirmDialog />
+
+    <TaskForm v-model:visible="formVisible" :task="editingTask" @saved="onSaved" />
+
     <div class="max-w-6xl mx-auto">
       <!-- Header -->
       <div class="flex items-center justify-between mb-6">
         <h1 class="text-xl font-bold text-gray-800">Tasks</h1>
-        <Button label="New task" icon="pi pi-plus" size="small" disabled />
+        <Button label="New task" icon="pi pi-plus" size="small" @click="openCreate" />
       </div>
 
       <!-- Filters -->
@@ -111,7 +183,6 @@ onMounted(async () => {
           :total-records="store.total"
           :first="(store.page - 1) * store.pageSize"
           paginator-template="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink"
-          :rows-per-page-options="[10, 20, 50]"
           class="text-sm"
           @page="onPageChange"
         >
@@ -137,15 +208,49 @@ onMounted(async () => {
             </template>
           </Column>
 
-          <Column field="created_at" header="Created" style="width: 130px">
+          <Column field="created_by" header="Creator" style="width: 160px">
+            <template #body="{ data }">
+              <span v-if="data.created_by" class="text-gray-500 text-xs">{{ data.created_by.name }}</span>
+            </template>
+          </Column>
+
+          <Column field="created_at" header="Created" style="width: 110px">
             <template #body="{ data }">
               <span class="text-gray-500">{{ new Date(data.created_at).toLocaleDateString() }}</span>
             </template>
           </Column>
 
-          <Column style="width: 60px">
-            <template #body>
-              <Button icon="pi pi-ellipsis-v" severity="secondary" text size="small" rounded disabled />
+          <Column header="" style="width: 120px">
+            <template #body="{ data }">
+              <div class="flex gap-1 items-center">
+                <Button
+                  v-if="canClaim(data)"
+                  label="Assign to me"
+                  size="small"
+                  text
+                  severity="secondary"
+                  class="text-xs"
+                  @click="claimTask(data)"
+                />
+                <Button
+                  v-if="canEdit(data)"
+                  icon="pi pi-pencil"
+                  severity="secondary"
+                  text
+                  size="small"
+                  rounded
+                  @click="openEdit(data)"
+                />
+                <Button
+                  v-if="canDelete(data)"
+                  icon="pi pi-trash"
+                  severity="danger"
+                  text
+                  size="small"
+                  rounded
+                  @click="confirmDelete(data)"
+                />
+              </div>
             </template>
           </Column>
         </DataTable>

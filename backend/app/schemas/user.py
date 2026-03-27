@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, EmailStr, Field, field_validator
 
 
 class UserOut(BaseModel):
@@ -10,6 +10,19 @@ class UserOut(BaseModel):
     created_at: datetime = Field(examples=["2024-01-15T09:00:00"])
 
     model_config = {"from_attributes": True}
+
+
+class UserCreate(BaseModel):
+    name: str = Field(min_length=1, max_length=100, examples=["Jane Doe"])
+    email: EmailStr = Field(examples=["jane@example.com"])
+    password: str = Field(min_length=8, examples=["supersecret"])
+
+    @field_validator("name")
+    @classmethod
+    def name_not_empty(cls, v: str) -> str:
+        if not v.strip():
+            raise ValueError("Name cannot be empty")
+        return v.strip()
 
 
 class TokenResponse(BaseModel):

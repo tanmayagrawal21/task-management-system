@@ -11,7 +11,7 @@ from app.schemas.task import PaginatedTasks, TaskCreate, TaskOut, TaskUpdate
 def _base_query(db: Session):
     return (
         db.query(Task)
-        .options(joinedload(Task.assigned_user))
+        .options(joinedload(Task.assigned_user), joinedload(Task.created_by))
         .filter(Task.deleted_at.is_(None))
     )
 
@@ -21,6 +21,19 @@ def _validate_user(user_id: int | None, db: Session) -> None:
         exists = db.query(User.id).filter(User.id == user_id, User.deleted_at.is_(None)).first()
         if not exists:
             raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="Assigned user not found")
+
+
+def _check_can_edit(task: Task, current_user: User) -> None:
+    if task.created_by_id == current_user.id:
+        return
+    if task.assigned_user_id == current_user.id:
+        return
+    raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Only the task creator or assignee can edit this task")
+
+
+def _check_can_delete(task: Task, current_user: User) -> None:
+    if task.created_by_id != current_user.id:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Only the task creator can delete this task")
 
 
 def get_tasks(
@@ -49,19 +62,21 @@ def get_tasks(
     )
 
 
-def create_task(data: TaskCreate, db: Session) -> TaskOut:
+def create_task(data: TaskCreate, current_user: User, db: Session) -> TaskOut:
     _validate_user(data.assigned_user_id, db)
-    task = Task(**data.model_dump())
+    task = Task(**data.model_dump(), created_by_id=current_user.id)
     db.add(task)
     db.commit()
     db.refresh(task)
     return TaskOut.model_validate(_base_query(db).filter(Task.id == task.id).one())
 
 
-def update_task(task_id: int, data: TaskUpdate, db: Session) -> TaskOut:
+def update_task(task_id: int, data: TaskUpdate, current_user: User, db: Session) -> TaskOut:
     task = _base_query(db).filter(Task.id == task_id).first()
     if task is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Task not found")
+
+    _check_can_edit(task, current_user)
 
     updates = data.model_dump(exclude_unset=True)
     if "assigned_user_id" in updates:
@@ -76,10 +91,26 @@ def update_task(task_id: int, data: TaskUpdate, db: Session) -> TaskOut:
     return TaskOut.model_validate(_base_query(db).filter(Task.id == task_id).one())
 
 
-def delete_task(task_id: int, db: Session) -> None:
+def claim_task(task_id: int, current_user: User, db: Session) -> TaskOut:
+    task = _base_query(db).filter(Task.id == task_id).first()
+    if task is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Task not found")
+    if task.assigned_user_id is not None:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Task is already assigned")
+
+    task.assigned_user_id = current_user.id
+    task.updated_at = datetime.now(timezone.utc)
+    db.commit()
+    db.refresh(task)
+    return TaskOut.model_validate(_base_query(db).filter(Task.id == task_id).one())
+
+
+def delete_task(task_id: int, current_user: User, db: Session) -> None:
     task = db.query(Task).filter(Task.id == task_id, Task.deleted_at.is_(None)).first()
     if task is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Task not found")
+
+    _check_can_delete(task, current_user)
 
     task.deleted_at = datetime.now(timezone.utc)
     db.commit()

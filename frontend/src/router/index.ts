@@ -16,6 +16,11 @@ const router = createRouter({
       component: () => import('@/views/TaskListView.vue'),
     },
     {
+      path: '/users',
+      name: 'users',
+      component: () => import('@/views/UsersView.vue'),
+    },
+    {
       path: '/:pathMatch(.*)*',
       redirect: '/',
     },

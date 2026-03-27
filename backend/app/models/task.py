@@ -25,16 +25,21 @@ class Task(Base):
     assigned_user_id: Mapped[int | None] = mapped_column(
         ForeignKey("users.id", ondelete="SET NULL"), nullable=True
     )
+    created_by_id: Mapped[int | None] = mapped_column(
+        ForeignKey("users.id", ondelete="SET NULL"), nullable=True
+    )
     created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now(), nullable=False)
     updated_at: Mapped[datetime] = mapped_column(
         DateTime, server_default=func.now(), onupdate=func.now(), nullable=False
     )
     deleted_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True, default=None)
 
-    assigned_user: Mapped["User | None"] = relationship("User", back_populates="tasks")  # noqa: F821
+    assigned_user: Mapped["User | None"] = relationship("User", foreign_keys=[assigned_user_id], back_populates="tasks")  # noqa: F821
+    created_by: Mapped["User | None"] = relationship("User", foreign_keys=[created_by_id])  # noqa: F821
 
     __table_args__ = (
         Index("ix_tasks_status", "status"),
         Index("ix_tasks_assigned_user_id", "assigned_user_id"),
+        Index("ix_tasks_created_by_id", "created_by_id"),
         Index("ix_tasks_deleted_at", "deleted_at"),
     )

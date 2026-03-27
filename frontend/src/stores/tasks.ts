@@ -17,6 +17,8 @@ export interface Task {
   status: TaskStatus
   assigned_user_id: number | null
   assigned_user: User | null
+  created_by_id: number | null
+  created_by: User | null
   created_at: string
   updated_at: string
 }
@@ -58,13 +60,18 @@ export const useTasksStore = defineStore('tasks', () => {
     users.value = res.data
   }
 
-  async function createTask(data: { title: string; description?: string; status: TaskStatus; assigned_user_id?: number | null }) {
+  async function createTask(data: { title: string; description?: string | null; status: TaskStatus; assigned_user_id?: number | null }) {
     await api.post('/tasks', data)
     await fetchTasks()
   }
 
   async function updateTask(id: number, data: Partial<{ title: string; description: string | null; status: TaskStatus; assigned_user_id: number | null }>) {
     await api.put(`/tasks/${id}`, data)
+    await fetchTasks()
+  }
+
+  async function claimTask(id: number) {
+    await api.post(`/tasks/${id}/claim`)
     await fetchTasks()
   }
 
@@ -84,5 +91,5 @@ export const useTasksStore = defineStore('tasks', () => {
     fetchTasks()
   }
 
-  return { tasks, total, totalPages, page, pageSize, loading, filters, users, fetchTasks, fetchUsers, createTask, updateTask, deleteTask, setPage, setFilters }
+  return { tasks, total, totalPages, page, pageSize, loading, filters, users, fetchTasks, fetchUsers, createTask, updateTask, claimTask, deleteTask, setPage, setFilters }
 })
