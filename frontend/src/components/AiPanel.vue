@@ -131,7 +131,7 @@ const draftKey = ref(chat.apiKey.value)
 const providerOptions = [
   { label: 'Claude (Anthropic)', value: 'claude' },
   { label: 'GPT-4o (OpenAI)', value: 'openai' },
-  { label: 'Gemini 1.5 Pro (Google)', value: 'gemini' },
+  { label: 'Gemini 2.0 Flash (Google)', value: 'gemini' },
 ]
 
 function saveSettings() {
