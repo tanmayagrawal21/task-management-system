@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(find /Users/tanmayagrawal/task_mgmt -maxdepth 2 -not -path */.git*)"
+    ]
+  }
+}
