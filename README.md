@@ -37,7 +37,29 @@ task_mgmt/
 
 ## Setup
 
-### Backend
+### Option A — Docker (recommended)
+
+Requires [Docker](https://docs.docker.com/get-docker/) and Docker Compose.
+
+```bash
+# Set a secret key for JWT signing (required)
+export SECRET_KEY=your-secret-key-here
+
+docker compose up --build
+```
+
+The app will be available at <http://localhost:8080>.
+
+API docs at <http://localhost:8000/docs>
+
+> The database is stored in a Docker volume (`db_data`) and persists across restarts.
+> To load sample data, run `docker compose exec backend python seed.py`.
+
+---
+
+### Option B — Manual setup
+
+#### Backend
 
 ```bash
 cd backend
@@ -49,7 +71,7 @@ cp .env.example .env
 # Edit .env and set a SECRET_KEY
 
 alembic upgrade head            # create database tables
-python seed.py                  # load sample data
+python seed.py                  # load sample data (optional)
 
 uvicorn app.main:app --reload
 ```
@@ -58,7 +80,7 @@ Backend runs at <http://localhost:8000>
 
 API docs at <http://localhost:8000/docs>
 
-### Frontend
+#### Frontend
 
 ```bash
 cd frontend
@@ -67,6 +89,8 @@ npm run dev
 ```
 
 Frontend runs at <http://localhost:5173>
+
+---
 
 ## API Overview
 
