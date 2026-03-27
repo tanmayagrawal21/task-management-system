@@ -270,7 +270,7 @@ export function useAiChat() {
   async function runGemini(systemPrompt: string, store: ReturnType<typeof useTasksStore>) {
     const genAI = new GoogleGenerativeAI(apiKey.value)
     const model = genAI.getGenerativeModel({
-      model: 'gemini-2.0-flash',
+      model: 'gemini-3-flash-preview',
       systemInstruction: systemPrompt,
       tools: [{
         functionDeclarations: TOOL_DEFINITIONS.map(t => ({
