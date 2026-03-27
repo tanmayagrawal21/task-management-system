@@ -72,11 +72,13 @@ Frontend runs at <http://localhost:5173>
 
 | Method | Endpoint | Auth | Description |
 | --- | --- | --- | --- |
+| POST | `/auth/register` | No | Create account, returns JWT |
 | POST | `/auth/login` | No | Login, returns JWT |
 | GET | `/users` | Yes | List all users |
 | GET | `/tasks` | Yes | List tasks (paginated, filterable) |
 | POST | `/tasks` | Yes | Create a task |
 | PUT | `/tasks/{id}` | Yes | Update a task |
+| POST | `/tasks/{id}/claim` | Yes | Assign yourself to an unassigned task |
 | DELETE | `/tasks/{id}` | Yes | Soft-delete a task |
 
 ### Query parameters for `GET /tasks`
@@ -90,19 +92,27 @@ Frontend runs at <http://localhost:5173>
 
 Full interactive documentation is available at <http://localhost:8000/docs> when the backend is running.
 
-## Sample Credentials
+## Permissions
 
-| Name | Email | Password |
-| --- | --- | --- |
-| Alice Martin | alice@example.com | password123 |
-| Bob Chen | bob@example.com | password123 |
-| Carol Davis | carol@example.com | password123 |
+| Action | Who |
+| --- | --- |
+| View all tasks | Any authenticated user |
+| Create task | Any authenticated user (becomes creator) |
+| Edit task | Creator or current assignee |
+| Claim unassigned task | Any authenticated user |
+| Delete task | Creator only |
+
+## Accounts
+
+Register directly from the login page — no invite needed.
+
+For local development, `backend/seed.py` populates the database with sample users and tasks. Run it once after the migration step. Credentials are defined in that file.
 
 ## Database
 
 SQLite with SQLAlchemy ORM. Schema managed via Alembic migrations.
 
 - `users` — id, name, email, hashed_password, created_at, deleted_at
-- `tasks` — id, title, description, status, assigned_user_id (FK), created_at, updated_at, deleted_at
+- `tasks` — id, title, description, status, assigned_user_id (FK), created_by_id (FK), created_at, updated_at, deleted_at
 
-Tasks support soft delete (`deleted_at` timestamp). Indexes on `status` and `assigned_user_id` for query performance.
+Tasks support soft delete (`deleted_at` timestamp). Indexes on `status`, `assigned_user_id`, and `created_by_id` for query performance.

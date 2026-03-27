@@ -35,12 +35,14 @@ export const useTasksStore = defineStore('tasks', () => {
   const page = ref(1)
   const pageSize = ref(20)
   const loading = ref(false)
+  const fetchError = ref('')
   const filters = ref<TaskFilters>({})
 
   const users = ref<User[]>([])
 
   async function fetchTasks() {
     loading.value = true
+    fetchError.value = ''
     try {
       const params: Record<string, any> = { page: page.value, page_size: pageSize.value }
       if (filters.value.status) params.status = filters.value.status
@@ -50,6 +52,8 @@ export const useTasksStore = defineStore('tasks', () => {
       tasks.value = res.data.items
       total.value = res.data.total
       totalPages.value = res.data.total_pages
+    } catch (e: any) {
+      fetchError.value = e?.message ?? 'Failed to load tasks'
     } finally {
       loading.value = false
     }
@@ -91,5 +95,5 @@ export const useTasksStore = defineStore('tasks', () => {
     fetchTasks()
   }
 
-  return { tasks, total, totalPages, page, pageSize, loading, filters, users, fetchTasks, fetchUsers, createTask, updateTask, claimTask, deleteTask, setPage, setFilters }
+  return { tasks, total, totalPages, page, pageSize, loading, fetchError, filters, users, fetchTasks, fetchUsers, createTask, updateTask, claimTask, deleteTask, setPage, setFilters }
 })

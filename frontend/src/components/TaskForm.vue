@@ -102,7 +102,7 @@ async function submit() {
   <Dialog
     :visible="visible"
     :header="isEditing ? 'Edit task' : 'New task'"
-    :style="{ width: '32rem' }"
+    :style="{ width: 'min(32rem, 95vw)' }"
     :modal="true"
     :draggable="false"
     @update:visible="close"

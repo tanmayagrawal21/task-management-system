@@ -134,7 +134,7 @@ onMounted(async () => {
       </div>
 
       <!-- Filters -->
-      <div class="bg-white rounded-xl border border-gray-200 p-4 mb-4 flex flex-wrap gap-3 items-center">
+      <div class="bg-white rounded-xl border border-gray-200 p-4 mb-4 flex flex-wrap gap-3 items-center justify-between">
         <Select
           v-model="selectedStatus"
           :options="statusOptions"
@@ -163,6 +163,13 @@ onMounted(async () => {
         <span class="ml-auto text-sm text-gray-500">{{ store.total }} task{{ store.total !== 1 ? 's' : '' }}</span>
       </div>
 
+      <!-- Fetch error -->
+      <div v-if="store.fetchError" class="bg-white rounded-xl border border-red-200 p-6 text-center text-red-500 mb-4">
+        <i class="pi pi-exclamation-circle text-2xl mb-2 block" />
+        {{ store.fetchError }}
+        <button class="ml-2 text-sm underline" @click="store.fetchTasks()">Retry</button>
+      </div>
+
       <!-- Loading skeletons -->
       <div v-if="store.loading" class="bg-white rounded-xl border border-gray-200 overflow-hidden">
         <div v-for="i in 5" :key="i" class="flex gap-4 px-4 py-3 border-b border-gray-100 last:border-0">
@@ -174,7 +181,7 @@ onMounted(async () => {
       </div>
 
       <!-- Table -->
-      <div v-else class="bg-white rounded-xl border border-gray-200 overflow-hidden">
+      <div v-else class="bg-white rounded-xl border border-gray-200 overflow-x-auto">
         <DataTable
           :value="store.tasks"
           lazy
