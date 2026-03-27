@@ -1,5 +1,7 @@
 # Task Management Application
 
+**Live demo:** [tskmgmt.fly.dev](https://tskmgmt.fly.dev) — API docs: [tskmgmt-api.fly.dev/docs](https://tskmgmt-api.fly.dev/docs)
+
 A full-stack task management system with a FastAPI backend and Vue 3 frontend.
 
 ## Stack
